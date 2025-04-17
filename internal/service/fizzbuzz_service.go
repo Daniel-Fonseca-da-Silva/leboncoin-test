@@ -6,16 +6,35 @@ import (
 	"github.com/dafon/projects/leboncoin-test/internal/model"
 )
 
+// FizzBuzzCalculator define a interface para cálculo do FizzBuzz
 type FizzBuzzCalculator interface {
 	Calculate(req model.FizzBuzzRequest) []string
 }
 
-type StatsRepository interface {
+// StatsIncrementer define a interface para incremento de estatísticas
+type StatsIncrementer interface {
 	IncrementStats(req model.FizzBuzzRequest)
+}
+
+// StatsRetriever define a interface para recuperação de estatísticas
+type StatsRetriever interface {
 	GetMostFrequentRequest() (model.FizzBuzzRequest, int)
 }
 
-type FizzBuzzService struct {
+// StatsRepository combina as interfaces de estatísticas
+type StatsRepository interface {
+	StatsIncrementer
+	StatsRetriever
+}
+
+// FizzBuzzService define a interface do serviço
+type FizzBuzzService interface {
+	CalculateFizzBuzz(req model.FizzBuzzRequest) model.FizzBuzzResponse
+	GetStats() model.Stats
+}
+
+// DefaultFizzBuzzService implementa FizzBuzzService
+type DefaultFizzBuzzService struct {
 	calculator FizzBuzzCalculator
 	statsRepo  StatsRepository
 }
@@ -56,8 +75,8 @@ func (c *DefaultFizzBuzzCalculator) Calculate(req model.FizzBuzzRequest) []strin
 	return result
 }
 
-func NewFizzBuzzService(calculator FizzBuzzCalculator, statsRepo StatsRepository) *FizzBuzzService {
-	return &FizzBuzzService{
+func NewFizzBuzzService(calculator FizzBuzzCalculator, statsRepo StatsRepository) FizzBuzzService {
+	return &DefaultFizzBuzzService{
 		calculator: calculator,
 		statsRepo:  statsRepo,
 	}
@@ -66,7 +85,7 @@ func NewFizzBuzzService(calculator FizzBuzzCalculator, statsRepo StatsRepository
 // CalculateFizzBuzz performs the FizzBuzz calculation from 1 to limit
 // Tenho uma funcao chamada CalculateFizzBuzz que recebe um modelo FizzBuzzRequest com os parametros int1, int2, limit, str1 e str2
 // E retorna um modelo FizzBuzzResponse com o resultado da calculacao
-func (s *FizzBuzzService) CalculateFizzBuzz(req model.FizzBuzzRequest) model.FizzBuzzResponse {
+func (s *DefaultFizzBuzzService) CalculateFizzBuzz(req model.FizzBuzzRequest) model.FizzBuzzResponse {
 	result := s.calculator.Calculate(req)
 	s.statsRepo.IncrementStats(req)
 
@@ -76,7 +95,7 @@ func (s *FizzBuzzService) CalculateFizzBuzz(req model.FizzBuzzRequest) model.Fiz
 }
 
 // Aqui eu retorno as estatísticas da requisição mais frequente
-func (s *FizzBuzzService) GetStats() model.Stats {
+func (s *DefaultFizzBuzzService) GetStats() model.Stats {
 	req, hits := s.statsRepo.GetMostFrequentRequest()
 	return model.Stats{
 		Request: req,

@@ -17,8 +17,9 @@ import (
 )
 
 func main() {
-	statsRepo := repository.NewStatsRepository()
-	fizzBuzzService := service.NewFizzBuzzService(statsRepo)
+	statsRepo := repository.GetInstance()
+	calculator := service.NewDefaultFizzBuzzCalculator()
+	fizzBuzzService := service.NewFizzBuzzService(calculator, statsRepo)
 	fizzBuzzHandler := handler.NewFizzBuzzHandler(fizzBuzzService)
 	healthHandler := handler.NewHealthHandler()
 

@@ -5,21 +5,37 @@ import (
 	"sync"
 
 	"github.com/dafon/projects/leboncoin-test/internal/model"
+	"github.com/dafon/projects/leboncoin-test/internal/service"
 )
 
-// Este repository é responsável por armazenar as estatísticas das requisições do FizzBuzz
 type StatsRepository struct {
 	mu       sync.RWMutex
 	stats    map[string]int
 	requests map[string]model.FizzBuzzRequest
 }
 
-// Aqui eu crio uma instancia de um novo repositório as estatísticas
-func NewStatsRepository() *StatsRepository {
-	return &StatsRepository{
-		stats:    make(map[string]int),
-		requests: make(map[string]model.FizzBuzzRequest),
-	}
+var _ service.StatsRepository = (*StatsRepository)(nil)
+
+var (
+	instance *StatsRepository
+	once     sync.Once
+)
+
+// Aqui eu retorno o singleton da instancia do repositório
+func GetInstance() *StatsRepository {
+	once.Do(func() {
+		instance = &StatsRepository{
+			stats:    make(map[string]int),
+			requests: make(map[string]model.FizzBuzzRequest),
+		}
+	})
+	return instance
+}
+
+// Aqui eu reseto a instancia do repositório para que seja criada uma nova instancia (principalmente para fins de teste)
+func ResetInstance() {
+	instance = nil
+	once = sync.Once{}
 }
 
 // Aqui eu incremento o contador de requisições para uma requisição específica

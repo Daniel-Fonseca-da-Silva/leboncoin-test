@@ -4,23 +4,31 @@ import (
 	"strconv"
 
 	"github.com/dafon/projects/leboncoin-test/internal/model"
-	"github.com/dafon/projects/leboncoin-test/internal/repository"
 )
 
+type FizzBuzzCalculator interface {
+	Calculate(req model.FizzBuzzRequest) []string
+}
+
+type StatsRepository interface {
+	IncrementStats(req model.FizzBuzzRequest)
+	GetMostFrequentRequest() (model.FizzBuzzRequest, int)
+}
+
 type FizzBuzzService struct {
-	statsRepo *repository.StatsRepository
+	calculator FizzBuzzCalculator
+	statsRepo  StatsRepository
 }
 
-func NewFizzBuzzService(statsRepo *repository.StatsRepository) *FizzBuzzService {
-	return &FizzBuzzService{
-		statsRepo: statsRepo,
-	}
+type DefaultFizzBuzzCalculator struct{}
+
+func NewDefaultFizzBuzzCalculator() *DefaultFizzBuzzCalculator {
+	return &DefaultFizzBuzzCalculator{}
 }
 
-// CalculateFizzBuzz performs the FizzBuzz calculation from 1 to limit
-// Tenho uma funcao chamada CalculateFizzBuzz que recebe um modelo FizzBuzzRequest com os parametros int1, int2, limit, str1 e str2
-// E retorna um modelo FizzBuzzResponse com o resultado da calculacao
-func (s *FizzBuzzService) CalculateFizzBuzz(req model.FizzBuzzRequest) model.FizzBuzzResponse {
+// Funcao que calcula o FizzBuzz recebendo um modelo FizzBuzzRequest com os parametros int1, int2, limit, str1 e str2
+// E retorna um slice de strings com o resultado da calculacao
+func (c *DefaultFizzBuzzCalculator) Calculate(req model.FizzBuzzRequest) []string {
 	result := make([]string, req.Limit)
 
 	for i := 1; i <= req.Limit; i++ {
@@ -45,10 +53,23 @@ func (s *FizzBuzzService) CalculateFizzBuzz(req model.FizzBuzzRequest) model.Fiz
 		}
 	}
 
-	// Aqui eu registro a requisição para as estatísticas
+	return result
+}
+
+func NewFizzBuzzService(calculator FizzBuzzCalculator, statsRepo StatsRepository) *FizzBuzzService {
+	return &FizzBuzzService{
+		calculator: calculator,
+		statsRepo:  statsRepo,
+	}
+}
+
+// CalculateFizzBuzz performs the FizzBuzz calculation from 1 to limit
+// Tenho uma funcao chamada CalculateFizzBuzz que recebe um modelo FizzBuzzRequest com os parametros int1, int2, limit, str1 e str2
+// E retorna um modelo FizzBuzzResponse com o resultado da calculacao
+func (s *FizzBuzzService) CalculateFizzBuzz(req model.FizzBuzzRequest) model.FizzBuzzResponse {
+	result := s.calculator.Calculate(req)
 	s.statsRepo.IncrementStats(req)
 
-	// Aqui eu retorno o resultado da calculacao
 	return model.FizzBuzzResponse{
 		Result: result,
 	}

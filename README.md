@@ -10,6 +10,7 @@ A production-ready REST API implementation of the FizzBuzz problem using Go, Chi
 - Input validation
 - Graceful shutdown
 - Production-ready middleware
+- Docker support
 
 ## API Endpoints
 
@@ -72,6 +73,8 @@ Response:
 
 ## Setup and Running
 
+### Local Development
+
 1. Make sure you have Go 1.21 or later installed
 2. Clone the repository
 3. Install dependencies:
@@ -85,7 +88,36 @@ Response:
 
 The server will start on port 8080.
 
-## Testing the API
+### Docker Deployment
+
+The project includes Docker support with a Makefile for easy management:
+
+```bash
+# Build the Docker image
+make build
+
+# Start the container
+make up
+
+# Stop and remove the container
+make down
+```
+
+## Testing
+
+### Running Tests
+
+To run the tests, use the following command:
+
+```bash
+# Run all tests
+go test -v ./...
+
+# Run specific package tests
+go test -v ./internal/service/...
+```
+
+### API Testing
 
 You can test the API using curl:
 
@@ -122,4 +154,5 @@ The application follows clean architecture principles with the following layers:
 - Graceful shutdown on SIGINT and SIGTERM signals
 - Input validation for all requests
 - Thread-safe statistics tracking
-- Health check endpoint for monitoring 
+- Health check endpoint for monitoring
+- Docker support for containerized deployment

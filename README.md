@@ -11,6 +11,7 @@ A production-ready REST API implementation of the FizzBuzz problem using Go, Chi
 - Graceful shutdown
 - Production-ready middleware
 - Docker support
+- Structured JSON logging system
 
 ## API Endpoints
 
@@ -103,6 +104,33 @@ make up
 make down
 ```
 
+## Logging System
+
+The application uses a structured JSON logging system with the following features:
+
+- Log levels: DEBUG, INFO, WARN, ERROR
+- JSON-formatted log entries
+- Timestamp in RFC3339 format
+- Request ID tracking
+- Additional context fields for each log entry
+
+Example log entry:
+```json
+{
+    "timestamp": "2024-04-18T14:30:00Z",
+    "level": "INFO",
+    "message": "Request started",
+    "fields": {
+        "request_id": "req-123",
+        "method": "POST",
+        "path": "/fizzbuzz",
+        "remote_ip": "127.0.0.1"
+    }
+}
+```
+
+Logs are written to stdout by default and can be redirected to a file or log management system in production.
+
 ## Testing
 
 ### Running Tests
@@ -142,11 +170,12 @@ The application follows clean architecture principles with the following layers:
 - **Repository**: Data storage and retrieval
 - **Service**: Business logic
 - **Handler**: HTTP request handling and routing
+- **Config**: Application configuration and logging
 
 ## Production Considerations
 
 - The server includes middleware for:
-  - Request logging
+  - Request logging with structured JSON format
   - Panic recovery
   - Real IP detection
   - Request ID tracking
@@ -156,3 +185,4 @@ The application follows clean architecture principles with the following layers:
 - Thread-safe statistics tracking
 - Health check endpoint for monitoring
 - Docker support for containerized deployment
+- Configurable logging levels (DEBUG, INFO, WARN, ERROR)

@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/dafon/projects/leboncoin-test/internal/config"
 	"github.com/dafon/projects/leboncoin-test/internal/handler"
 	"github.com/dafon/projects/leboncoin-test/internal/repository"
 	"github.com/dafon/projects/leboncoin-test/internal/service"
@@ -17,6 +17,9 @@ import (
 )
 
 func main() {
+	logger := config.NewLogger("[FizzBuzz]")
+	logger.SetLevel(config.INFO)
+
 	statsRepo := repository.GetInstance()
 	calculator := service.NewDefaultFizzBuzzCalculator()
 	fizzBuzzService := service.NewFizzBuzzService(calculator, statsRepo)
@@ -25,11 +28,24 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.RequestID)
 	r.Use(middleware.Timeout(60 * time.Second))
+
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestID := middleware.GetReqID(r.Context())
+			logger.Info("Request started", map[string]interface{}{
+				"request_id": requestID,
+				"method":     r.Method,
+				"path":       r.URL.Path,
+				"remote_ip":  r.RemoteAddr,
+			})
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	fizzBuzzHandler.RegisterRoutes(r)
 
@@ -43,9 +59,13 @@ func main() {
 	}
 
 	go func() {
-		log.Println("Server starting on port 8080")
+		logger.Info("Server starting", map[string]interface{}{
+			"port": 8080,
+		})
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server failed to start: %v", err)
+			logger.Error("Server failed to start", map[string]interface{}{
+				"error": err.Error(),
+			})
 		}
 	}()
 
@@ -53,14 +73,16 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Server shutting down...")
+	logger.Info("Server shutting down...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		logger.Error("Server forced to shutdown", map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 
-	log.Println("Server exited properly")
+	logger.Info("Server exited properly")
 }

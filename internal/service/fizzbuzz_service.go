@@ -7,6 +7,7 @@ import (
 )
 
 // FizzBuzzCalculator define a interface para cálculo do FizzBuzz
+// Aqui estou usando o padrao de interface para garantir que o calculo do FizzBuzz seja feito de forma independente
 type FizzBuzzCalculator interface {
 	Calculate(req model.FizzBuzzRequest) []string
 }
@@ -75,6 +76,7 @@ func (c *DefaultFizzBuzzCalculator) Calculate(req model.FizzBuzzRequest) []strin
 	return result
 }
 
+// Aqui estou usando o padrao de factory para criar uma instancia de FizzBuzzService
 func NewFizzBuzzService(calculator FizzBuzzCalculator, statsRepo StatsRepository) FizzBuzzService {
 	return &DefaultFizzBuzzService{
 		calculator: calculator,

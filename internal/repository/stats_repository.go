@@ -9,6 +9,7 @@ import (
 )
 
 // DefaultStatsRepository implementa service.StatsRepository
+// Aqui estou usando o padrao singleton com injecao de dependencias para garantir que o repositorio seja uma instancia unica
 type DefaultStatsRepository struct {
 	mu       sync.RWMutex
 	stats    map[string]int
